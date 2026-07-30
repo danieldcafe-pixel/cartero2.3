@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f2136" />
+  <title>Messages</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="contactsScreen" class="app-shell contacts-shell screen" aria-label="Contacts screen">
+    <header class="contacts-topbar">
+      <h1>Messages</h1>
+      <button class="icon-button compose-button" aria-label="New message">&#9998;</button>
+    </header>
+
+    <div class="search-bar">
+      <span class="search-icon" aria-hidden="true">&#8981;</span>
+      <input type="text" placeholder="Search" disabled />
+    </div>
+
+    <section class="contacts-list" aria-label="Contact list">
+      <button class="contact-row" data-contact="linda">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/linda.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Linda</span>
+            <span class="contact-row-time">Yesterday</span>
+          </span>
+          <span class="contact-row-preview">On my way home 🚗</span>
+        </span>
+      </button>
+
+      <div class="contact-row" data-contact="mom">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/mom.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Mom</span>
+            <span class="contact-row-time">9:10 AM</span>
+          </span>
+          <span class="contact-row-preview">Call me when you get a chance</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="david">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/david.webp" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">David · Work</span>
+            <span class="contact-row-time">8:47 AM</span>
+          </span>
+          <span class="contact-row-preview">Meeting moved to 3pm</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="emma">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/emma.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Emma Torres</span>
+            <span class="contact-row-time">Yesterday</span>
+          </span>
+          <span class="contact-row-preview">hahaha omg stop 😂</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="moshe">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/moshe.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Moshe</span>
+            <span class="contact-row-time">Thu</span>
+          </span>
+          <span class="contact-row-preview">Can we reschedule our call?</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="tobias">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/tobias.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Tobias Reyes</span>
+            <span class="contact-row-time">Sun</span>
+          </span>
+          <span class="contact-row-preview">Thanks for the ride yesterday!</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="daniel">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/daniel.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Daniel Prieto</span>
+            <span class="contact-row-time">11:52 AM</span>
+          </span>
+          <span class="contact-row-preview">📷 Photo</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="daniela">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/daniela.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Daniela Prieto</span>
+            <span class="contact-row-time">11:50 AM</span>
+          </span>
+          <span class="contact-row-preview">jajaja mira esta foto</span>
+        </span>
+      </div>
+
+      <div class="contact-row" data-contact="pizza">
+        <span class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/pizza.jpg" alt="" />
+        </span>
+        <span class="contact-row-copy">
+          <span class="contact-row-top">
+            <span class="contact-row-name">Pizza Palace</span>
+            <span class="contact-row-time">Sat</span>
+          </span>
+          <span class="contact-row-preview">Your order has been delivered</span>
+        </span>
+      </div>
+    </section>
+  </main>
+
+  <main id="messageScreen" class="app-shell screen is-hidden" aria-label="Messaging screen">
+    <div id="connectionBanner" class="connection-banner">
+      <span class="connection-dot"></span>
+      No Internet Connection
+    </div>
+
+    <header class="topbar">
+      <button class="icon-button back-button" aria-label="Go back">←</button>
+
+      <div class="contact">
+        <div class="avatar avatar-img" aria-hidden="true">
+          <img src="photos/linda.jpg" alt="" />
+        </div>
+        <div class="contact-copy">
+          <h1>Linda</h1>
+          <p>Last seen recently</p>
+        </div>
+      </div>
+
+      <button class="icon-button menu-button" aria-label="More options">⋮</button>
+    </header>
+
+    <section class="conversation" aria-live="polite">
+      <div class="day-label">Today</div>
+
+      <div id="messageRow" class="message-row is-hidden">
+        <div id="messageBubble" class="message-bubble">
+          <p id="sentMessage"></p>
+          <div class="message-meta">
+            <span id="messageTime">10:42 PM</span>
+            <span id="pendingIcon" class="status-icon" aria-label="Sending">
+              <svg class="icon-spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/></svg>
+              <svg class="icon-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5.5L20 6"/></svg>
+              <svg class="icon-alert" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="7" x2="12" y2="13.5"/>
+                <circle class="icon-alert-dot" cx="12" cy="16.7" r="1.15"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="postman-lane" id="postmanLane" aria-hidden="true">
+          <div class="postman" id="postman">
+            <svg class="postman-icon" viewBox="0 0 64 64">
+              <circle class="postman-head" cx="34" cy="10" r="6"/>
+              <path class="postman-bag" d="M18 20h6a4 4 0 014 4v9a4 4 0 01-4 4h-6a4 4 0 01-4-4v-9a4 4 0 014-4z"/>
+              <path class="postman-torso" d="M34 16 L34 38" stroke-width="7" stroke-linecap="round"/>
+              <path class="leg leg-a" d="M34 38 L24 56" stroke-width="6" stroke-linecap="round"/>
+              <path class="leg leg-b" d="M34 38 L46 56" stroke-width="6" stroke-linecap="round"/>
+              <path class="arm arm-a" d="M34 22 L22 30" stroke-width="5" stroke-linecap="round"/>
+              <path class="arm arm-b" d="M34 22 L48 18" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div id="errorState" class="error-state" role="status">
+          <span class="warning-icon">!</span>
+          <span>Message not sent</span>
+        </div>
+      </div>
+    </section>
+
+    <form id="composer" class="composer">
+      <button type="button" class="add-button" aria-label="Add attachment">+</button>
+
+      <div class="input-wrap">
+        <textarea
+          id="messageInput"
+          rows="1"
+          autocomplete="off"
+          autocorrect="on"
+          spellcheck="true"
+          aria-label="Message"
+        >we have been taken captive in our home¡ Call 911 immediately</textarea>
+      </div>
+
+      <button id="sendButton" class="send-button" type="submit">
+        <span class="send-icon">➤</span>
+        <span id="sendButtonText">Send Message</span>
+      </button>
+    </form>
+  </main>
+
+  <script src="screens.js"></script>
+  <script src="contacts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
