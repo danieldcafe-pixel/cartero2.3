@@ -1,232 +1,291 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0f2136" />
-  <title>Messages</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#07131e" id="themeColorMeta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VYBE" id="appleTitleMeta">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <link rel="stylesheet" href="style.css?v=1.6.1">
+  <title id="pageTitle">VYBE Live</title>
 </head>
 <body>
-  <main id="contactsScreen" class="app-shell contacts-shell screen" aria-label="Contacts screen">
-    <header class="contacts-topbar">
-      <h1>Messages</h1>
-      <button class="icon-button compose-button" aria-label="New message">&#9998;</button>
-    </header>
+  <main id="app">
+    <video id="camera" autoplay muted playsinline></video>
+    <div class="camera-grade"></div>
+    <div id="filterGlitchOverlay" class="filter-glitch-overlay" aria-hidden="true"></div>
 
-    <div class="search-bar">
-      <span class="search-icon" aria-hidden="true">&#8981;</span>
-      <input type="text" placeholder="Search" disabled />
-    </div>
-
-    <section class="contacts-list" aria-label="Contact list">
-      <button class="contact-row" data-contact="linda">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/linda.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Linda</span>
-            <span class="contact-row-time">Yesterday</span>
-          </span>
-          <span class="contact-row-preview">On my way home 🚗</span>
-        </span>
-      </button>
-
-      <div class="contact-row" data-contact="mom">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/mom.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Mom</span>
-            <span class="contact-row-time">9:10 AM</span>
-          </span>
-          <span class="contact-row-preview">Call me when you get a chance</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="david">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/david.webp" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">David · Work</span>
-            <span class="contact-row-time">8:47 AM</span>
-          </span>
-          <span class="contact-row-preview">Meeting moved to 3pm</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="emma">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/emma.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Emma Torres</span>
-            <span class="contact-row-time">Yesterday</span>
-          </span>
-          <span class="contact-row-preview">hahaha omg stop 😂</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="moshe">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/moshe.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Moshe</span>
-            <span class="contact-row-time">Thu</span>
-          </span>
-          <span class="contact-row-preview">Can we reschedule our call?</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="tobias">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/tobias.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Tobias Reyes</span>
-            <span class="contact-row-time">Sun</span>
-          </span>
-          <span class="contact-row-preview">Thanks for the ride yesterday!</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="daniel">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/daniel.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Daniel Prieto</span>
-            <span class="contact-row-time">11:52 AM</span>
-          </span>
-          <span class="contact-row-preview">📷 Photo</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="daniela">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/daniela.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Daniela Prieto</span>
-            <span class="contact-row-time">11:50 AM</span>
-          </span>
-          <span class="contact-row-preview">jajaja mira esta foto</span>
-        </span>
-      </div>
-
-      <div class="contact-row" data-contact="pizza">
-        <span class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/pizza.jpg" alt="" />
-        </span>
-        <span class="contact-row-copy">
-          <span class="contact-row-top">
-            <span class="contact-row-name">Pizza Palace</span>
-            <span class="contact-row-time">Sat</span>
-          </span>
-          <span class="contact-row-preview">Your order has been delivered</span>
-        </span>
-      </div>
-    </section>
-  </main>
-
-  <main id="messageScreen" class="app-shell screen is-hidden" aria-label="Messaging screen">
-    <div id="connectionBanner" class="connection-banner">
-      <span class="connection-dot"></span>
-      No Internet Connection
-    </div>
-
-    <header class="topbar">
-      <button class="icon-button back-button" aria-label="Go back">←</button>
-
-      <div class="contact">
-        <div class="avatar avatar-img" aria-hidden="true">
-          <img src="photos/linda.jpg" alt="" />
-        </div>
-        <div class="contact-copy">
-          <h1>Linda</h1>
-          <p>Last seen recently</p>
-        </div>
-      </div>
-
-      <button class="icon-button menu-button" aria-label="More options">⋮</button>
-    </header>
-
-    <section class="conversation" aria-live="polite">
-      <div class="day-label">Today</div>
-
-      <div id="messageRow" class="message-row is-hidden">
-        <div id="messageBubble" class="message-bubble">
-          <p id="sentMessage"></p>
-          <div class="message-meta">
-            <span id="messageTime">10:42 PM</span>
-            <span id="pendingIcon" class="status-icon" aria-label="Sending">
-              <svg class="icon-spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/></svg>
-              <svg class="icon-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5.5L20 6"/></svg>
-              <svg class="icon-alert" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="7" x2="12" y2="13.5"/>
-                <circle class="icon-alert-dot" cx="12" cy="16.7" r="1.15"/>
-              </svg>
-            </span>
-          </div>
-        </div>
-
-        <div class="postman-lane" id="postmanLane" aria-hidden="true">
-          <div class="postman" id="postman">
-            <svg class="postman-icon" viewBox="0 0 64 64">
-              <circle class="postman-head" cx="34" cy="10" r="6"/>
-              <path class="postman-bag" d="M18 20h6a4 4 0 014 4v9a4 4 0 01-4 4h-6a4 4 0 01-4-4v-9a4 4 0 014-4z"/>
-              <path class="postman-torso" d="M34 16 L34 38" stroke-width="7" stroke-linecap="round"/>
-              <path class="leg leg-a" d="M34 38 L24 56" stroke-width="6" stroke-linecap="round"/>
-              <path class="leg leg-b" d="M34 38 L46 56" stroke-width="6" stroke-linecap="round"/>
-              <path class="arm arm-a" d="M34 22 L22 30" stroke-width="5" stroke-linecap="round"/>
-              <path class="arm arm-b" d="M34 22 L48 18" stroke-width="5" stroke-linecap="round"/>
-            </svg>
-          </div>
-        </div>
-
-        <div id="errorState" class="error-state" role="status">
-          <span class="warning-icon">!</span>
-          <span>Message not sent</span>
-        </div>
+    <section id="launchScreen" class="launch-screen">
+      <div class="launch-card">
+        <div id="brandIcon" class="brand-icon press-target">V</div>
+        <div id="wordmark" class="wordmark">VYBE</div>
+        <p id="launchDescription">Open a live camera session with automatic audience activity.</p>
+        <button id="startLiveButton" class="launch-button">GO ON AIR</button>
+        <small id="launchHint">Camera permission is required.</small>
       </div>
     </section>
 
-    <form id="composer" class="composer">
-      <button type="button" class="add-button" aria-label="Add attachment">+</button>
-
-      <div class="input-wrap">
-        <textarea
-          id="messageInput"
-          rows="1"
-          autocomplete="off"
-          autocorrect="on"
-          spellcheck="true"
-          aria-label="Message"
-        >we have been taken captive in our home¡ Call 911 immediately</textarea>
+    <header class="top-area">
+      <div class="broadcast-brand">
+        <span id="miniLogo" class="mini-logo press-target">V</span>
+        <span id="brandLabel">VYBE / LIVE</span>
       </div>
 
-      <button id="sendButton" class="send-button" type="submit">
-        <span class="send-icon">➤</span>
-        <span id="sendButtonText">Send Message</span>
-      </button>
-    </form>
+      <div class="broadcast-state">
+        <span class="air-badge"><i></i> <span id="airBadgeText">ON AIR</span></span>
+        <span id="filterBadge" class="filter-badge"></span>
+        <span class="audience-badge"><b id="viewerCount">12</b> <span id="viewersSuffix">VIEWERS</span></span>
+      </div>
+    </header>
+
+    <section class="creator-card">
+      <div id="creatorAvatar" class="avatar"></div>
+      <div>
+        <strong id="displayName">Mara Vale</strong>
+        <span id="creatorMeta">@maravale · Los Angeles</span>
+      </div>
+    </section>
+
+    <section class="telemetry">
+      <span><i class="signal-dot"></i> <span id="signalText">STABLE</span></span>
+      <span><span id="camLabel">CAM</span> <b id="cameraLabel">FRONT</b></span>
+      <span><span id="timeLabel">TIME</span> <b id="elapsedTime">00:00</b></span>
+    </section>
+
+    <button id="switchCameraButton" class="switch-camera" aria-label="Switch camera">↻</button>
+    <button id="filterToggleButton" class="filter-toggle" aria-label="Toggle beauty filter">✨</button>
+
+    <section id="chatFeed" class="chat-feed"></section>
+    <section id="reactionField" class="reaction-field"></section>
+
+    <section class="activity-meter" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </section>
+
+    <footer class="bottom-dock">
+      <div id="messagePrompt" class="message-prompt">Send a message</div>
+      <button class="dock-button" aria-label="Share">↗</button>
+      <div class="reaction-control">
+        <button id="manualReactionButton" class="dock-button reaction-button" aria-label="React">✦</button>
+        <small id="reactionCount">0</small>
+      </div>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+
+    <div id="settingsBackdrop" class="settings-backdrop">
+      <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+          <h2>Ajustes de producción</h2>
+          <button id="settingsClose" class="settings-close" aria-label="Cerrar">✕</button>
+        </div>
+
+        <details open>
+          <summary>Marca</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Letra del logo</label>
+              <input type="text" maxlength="2" data-path="brand.letter">
+            </div>
+            <div class="settings-field">
+              <label>Nombre (pantalla inicial)</label>
+              <input type="text" data-path="brand.name">
+            </div>
+            <div class="settings-field">
+              <label>Texto de la esquina superior</label>
+              <input type="text" data-path="brand.label">
+            </div>
+            <div class="settings-field">
+              <label>Título de la pestaña del navegador</label>
+              <input type="text" data-path="brand.pageTitle">
+            </div>
+            <p class="settings-note">El nombre del icono en la pantalla de inicio del iPad viene de manifest.webmanifest y hay que cambiarlo aparte (no se puede editar desde aquí).</p>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Creador</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Nombre mostrado</label>
+              <input type="text" data-path="displayName">
+            </div>
+            <div class="settings-field">
+              <label>Usuario (@handle)</label>
+              <input type="text" data-path="handle">
+            </div>
+            <div class="settings-field">
+              <label>Ubicación</label>
+              <input type="text" data-path="location">
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Pantalla inicial</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Descripción</label>
+              <input type="text" data-path="launch.description">
+            </div>
+            <div class="settings-field">
+              <label>Texto del botón</label>
+              <input type="text" data-path="launch.buttonText">
+            </div>
+            <div class="settings-field">
+              <label>Aviso de permisos</label>
+              <input type="text" data-path="launch.hint">
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Espectadores y reacciones</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label class="settings-checkbox-row">
+                <input type="checkbox" id="freezeAutoNumbers">
+                Mantener los números fijos (no suben ni bajan solos)
+              </label>
+              <p class="settings-note">Si lo activas, espectadores y reacciones dejan de moverse por su cuenta; solo cambian si tú los cambias aquí abajo o con el botón de reacción manual.</p>
+            </div>
+            <div class="settings-field">
+              <label>Cambiar espectadores ahora mismo (durante la emisión)</label>
+              <div class="live-control-row">
+                <input type="number" min="0" id="liveViewersInput" placeholder="ej. 1200">
+                <button id="liveViewersApply" class="settings-standalone-button">Aplicar</button>
+              </div>
+              <p class="settings-note">Cambia el contador al instante si ya estás emitiendo (después de pulsar GO ON AIR). No hace falta "Guardar y aplicar" para esto.</p>
+            </div>
+            <div class="settings-field">
+              <label>Espectadores al pulsar GO ON AIR</label>
+              <input type="number" min="0" data-path="startingViewers">
+            </div>
+            <div class="settings-field">
+              <label>Reacciones al pulsar GO ON AIR</label>
+              <input type="number" min="0" data-path="startingReactions">
+            </div>
+            <p class="settings-note">Estos dos números se aplican la próxima vez que se pulse el botón de inicio.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Colores</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Color principal (cian)</label>
+              <input type="color" data-path="colors.cyan">
+            </div>
+            <div class="settings-field">
+              <label>Color secundario (violeta)</label>
+              <input type="color" data-path="colors.violet">
+            </div>
+            <div class="settings-field">
+              <label>Fondo</label>
+              <input type="color" data-path="colors.ink">
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Textos de estado y pie</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Texto "ON AIR"</label>
+              <input type="text" data-path="header.airBadgeText">
+            </div>
+            <div class="settings-field">
+              <label>Texto "VIEWERS"</label>
+              <input type="text" data-path="header.viewersSuffix">
+            </div>
+            <div class="settings-field">
+              <label>Señal (STABLE)</label>
+              <input type="text" data-path="telemetry.signalText">
+            </div>
+            <div class="settings-field">
+              <label>Etiqueta cámara (CAM)</label>
+              <input type="text" data-path="telemetry.camLabel">
+            </div>
+            <div class="settings-field">
+              <label>Etiqueta tiempo (TIME)</label>
+              <input type="text" data-path="telemetry.timeLabel">
+            </div>
+            <div class="settings-field">
+              <label>Cámara frontal</label>
+              <input type="text" data-path="telemetry.cameraFront">
+            </div>
+            <div class="settings-field">
+              <label>Cámara trasera</label>
+              <input type="text" data-path="telemetry.cameraRear">
+            </div>
+            <div class="settings-field">
+              <label>Barra de mensaje inferior</label>
+              <input type="text" data-path="dock.messagePrompt">
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Comentarios del chat</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Uno por línea: usuario | mensaje</label>
+              <textarea id="commentsField"></textarea>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Avatares</summary>
+          <div class="settings-body">
+            <div class="settings-field">
+              <label>Foto del creador</label>
+              <div class="avatar-upload-row">
+                <div id="creatorAvatarPreview" class="avatar-preview"></div>
+                <label class="settings-standalone-button avatar-upload-label" for="avatarCreatorInput">Subir foto</label>
+              </div>
+              <input type="file" id="avatarCreatorInput" accept="image/*" hidden>
+              <button id="avatarCreatorRemove" class="settings-standalone-button">Quitar foto</button>
+            </div>
+            <div class="settings-field">
+              <label>Fotos para el chat (se reparten entre los comentarios)</label>
+              <div id="chatAvatarGallery" class="avatar-gallery"></div>
+              <label class="settings-standalone-button avatar-upload-label" for="avatarChatInput">Añadir foto(s)</label>
+              <input type="file" id="avatarChatInput" accept="image/*" multiple hidden>
+            </div>
+            <p class="settings-note">Las fotos se guardan solo en este dispositivo. Con fotos añadidas, el enlace de sincronización puede quedarse muy largo — si falla al abrirlo, usa "Aplicar código pegado" copiando y pegando el texto completo (por ejemplo por WhatsApp o Notas) en vez de abrir el enlace corto.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Sincronizar entre dispositivos</summary>
+          <div class="settings-body">
+            <p class="settings-note">El teléfono y el ordenador guardan los ajustes por separado. Genera un enlace aquí y ábrelo en el otro dispositivo para que reciba los mismos ajustes.</p>
+            <button id="settingsShareLink" class="settings-standalone-button">Copiar enlace con estos ajustes</button>
+            <div class="settings-field">
+              <label>O pega aquí el enlace/código recibido</label>
+              <textarea id="importField" placeholder="Pega el enlace completo o el código"></textarea>
+            </div>
+            <button id="settingsImport" class="settings-standalone-button">Aplicar código pegado</button>
+          </div>
+        </details>
+
+        <div class="settings-actions">
+          <button id="settingsReset" class="settings-reset">Restablecer</button>
+          <button id="settingsSave" class="settings-save">Guardar y aplicar</button>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <script src="screens.js"></script>
-  <script src="contacts.js"></script>
-  <script src="app.js"></script>
+  <script src="config.js?v=1.6.1"></script>
+  <script src="camera.js?v=1.6.1"></script>
+  <script src="live.js?v=1.6.1"></script>
+  <script src="app.js?v=1.6.1"></script>
 </body>
 </html>
