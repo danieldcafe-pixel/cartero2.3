@@ -289,5 +289,36 @@
   <script src="camera.js?v=1.6.1"></script>
   <script src="live.js?v=1.6.1"></script>
   <script src="app.js?v=1.6.1"></script>
+  <script type="module">
+    // Detección facial real (MediaPipe) para que el filtro embellecedor
+    // sepa dónde está la piel y no toque ojos/labios. Se carga desde un
+    // CDN — necesita conexión a internet la primera vez que se abra la
+    // app (el modelo se cachea después). Si falla (sin conexión, etc.),
+    // camera.js cae de vuelta al desenfoque simple de toda la imagen.
+    import {
+      FilesetResolver,
+      FaceLandmarker
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+    window.__vybeFaceLandmarkerReady = (async () => {
+      const fileset = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+      );
+      const landmarker = await FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numFaces: 1
+      });
+      window.VYBE_FACE_LANDMARKER = landmarker;
+      return landmarker;
+    })().catch((error) => {
+      console.error("No se pudo cargar la detección facial:", error);
+      return null;
+    });
+  </script>
 </body>
 </html>
