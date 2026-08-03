@@ -7,10 +7,20 @@ window.VYBE_CAMERA = (() => {
   let filterOn = false;
   let lastOptions = {};
 
+  // La cámara real se reproduce oculta en <video id="cameraSource">.
+  // Lo que se ve en pantalla es <canvas id="camera">, donde pintamos
+  // cada fotograma nosotros mismos — así podemos mezclar una copia
+  // suavizada con la nítida (algo que un simple filtro CSS no puede
+  // hacer: un filtro CSS solo ensucia/aclara TODA la imagen por igual,
+  // nunca suaviza la piel manteniendo ojos/labios definidos).
+  let sourceVideo = null;
+  let canvasEl = null;
+  let ctx = null;
+  let rafId = null;
+
   function getGlitchOverlay() {
     return document.getElementById("filterGlitchOverlay");
   }
-
   function getFilterBadge() {
     return document.getElementById("filterBadge");
   }
@@ -24,19 +34,66 @@ window.VYBE_CAMERA = (() => {
     badgeHideTimer = null;
   }
 
-  function turnFilterOff(videoElement, options) {
+  function resizeCanvasToDisplaySize() {
+    const rect = canvasEl.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(rect.width * dpr));
+    const h = Math.max(1, Math.round(rect.height * dpr));
+    if (canvasEl.width !== w || canvasEl.height !== h) {
+      canvasEl.width = w;
+      canvasEl.height = h;
+    }
+  }
+
+  function drawCovered(source) {
+    const sw = source.videoWidth, sh = source.videoHeight;
+    if (!sw || !sh) return;
+    const cw = canvasEl.width, ch = canvasEl.height;
+    const scale = Math.max(cw / sw, ch / sh);
+    const dw = sw * scale, dh = sh * scale;
+    const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+    ctx.drawImage(source, dx, dy, dw, dh);
+  }
+
+  function renderLoop() {
+    rafId = requestAnimationFrame(renderLoop);
+    if (!sourceVideo || sourceVideo.readyState < 2 || !ctx) return;
+    resizeCanvasToDisplaySize();
+
+    if (filterOn) {
+      // 1) Base muy suavizada, más luminosa y cálida — la "piel más tersa".
+      ctx.filter = "blur(9px) brightness(1.22) saturate(1.3) contrast(0.92)";
+      drawCovered(sourceVideo);
+
+      // 2) Se repinta el fotograma nítido encima, en modo "overlay" y con
+      // opacidad reducida: esto devuelve la definición de ojos, cejas y
+      // labios, mientras la piel (zonas más planas) se queda dominada por
+      // la base suavizada de abajo.
+      ctx.filter = "none";
+      ctx.globalAlpha = 0.5;
+      ctx.globalCompositeOperation = "overlay";
+      drawCovered(sourceVideo);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+    } else {
+      ctx.filter = "none";
+      drawCovered(sourceVideo);
+    }
+  }
+
+  function turnFilterOff(canvasElement, options) {
     clearFilterTimers();
     filterOn = false;
 
     const overlay = getGlitchOverlay();
     const badge = getFilterBadge();
-    videoElement.classList.add("filter-glitch");
+    canvasElement.classList.add("filter-glitch");
     if (overlay) overlay.classList.add("active");
     if (badge) badge.textContent = options.offText || "FILTER OFF";
 
     const glitchMs = options.glitchMs ?? 650;
     glitchTimer = setTimeout(() => {
-      videoElement.classList.remove("beauty-filter", "filter-glitch");
+      canvasElement.classList.remove("beauty-filter", "filter-glitch");
       if (overlay) overlay.classList.remove("active");
       badgeHideTimer = setTimeout(() => {
         if (badge) badge.classList.remove("show");
@@ -44,15 +101,15 @@ window.VYBE_CAMERA = (() => {
     }, glitchMs);
   }
 
-  function turnFilterOn(videoElement, options) {
+  function turnFilterOn(canvasElement, options) {
     clearFilterTimers();
     filterOn = true;
 
     const overlay = getGlitchOverlay();
     const badge = getFilterBadge();
-    videoElement.classList.remove("filter-glitch");
+    canvasElement.classList.remove("filter-glitch");
     if (overlay) overlay.classList.remove("active");
-    videoElement.classList.add("beauty-filter");
+    canvasElement.classList.add("beauty-filter");
 
     if (badge) {
       badge.textContent = options.activeText || "✨ FILTER ON";
@@ -60,29 +117,29 @@ window.VYBE_CAMERA = (() => {
     }
 
     const durationMs = Math.max(0, (options.durationSeconds ?? 40) * 1000);
-    filterTimer = setTimeout(() => turnFilterOff(videoElement, options), durationMs);
+    filterTimer = setTimeout(() => turnFilterOff(canvasElement, options), durationMs);
   }
 
-  function startBeautyFilter(videoElement, options = {}) {
+  function startBeautyFilter(canvasElement, options = {}) {
     lastOptions = options;
-    turnFilterOn(videoElement, options);
+    turnFilterOn(canvasElement, options);
   }
 
-  function toggleBeautyFilter(videoElement, options = lastOptions) {
+  function toggleBeautyFilter(canvasElement, options = lastOptions) {
     lastOptions = options;
     if (filterOn) {
-      turnFilterOff(videoElement, options);
+      turnFilterOff(canvasElement, options);
     } else {
-      turnFilterOn(videoElement, options);
+      turnFilterOn(canvasElement, options);
     }
   }
 
-  function stopBeautyFilter(videoElement) {
+  function stopBeautyFilter(canvasElement) {
     clearFilterTimers();
     filterOn = false;
     const overlay = getGlitchOverlay();
     const badge = getFilterBadge();
-    videoElement.classList.remove("beauty-filter", "filter-glitch");
+    canvasElement.classList.remove("beauty-filter", "filter-glitch");
     if (overlay) overlay.classList.remove("active");
     if (badge) badge.classList.remove("show");
   }
@@ -91,10 +148,13 @@ window.VYBE_CAMERA = (() => {
     return filterOn;
   }
 
-  async function start(videoElement) {
+  async function start(canvasElement) {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error("Camera API is unavailable.");
     }
+
+    canvasEl = canvasElement;
+    ctx = canvasEl.getContext("2d");
 
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -109,14 +169,21 @@ window.VYBE_CAMERA = (() => {
       }
     });
 
-    videoElement.srcObject = stream;
-    videoElement.classList.toggle("mirror", facing === "user");
-    await videoElement.play();
+    if (!sourceVideo) {
+      sourceVideo = document.getElementById("cameraSource");
+    }
+    sourceVideo.srcObject = stream;
+    canvasElement.classList.toggle("mirror", facing === "user");
+    await sourceVideo.play();
+
+    if (!rafId) {
+      renderLoop();
+    }
   }
 
-  async function switchCamera(videoElement) {
+  async function switchCamera(canvasElement) {
     facing = facing === "user" ? "environment" : "user";
-    await start(videoElement);
+    await start(canvasElement);
     return facing;
   }
 
