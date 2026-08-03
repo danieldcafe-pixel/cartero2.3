@@ -31,7 +31,7 @@ window.VYBE_CAMERA = (() => {
   }
 
   let frameCounter = 0;
-  const DETECT_EVERY_N_FRAMES = 3; // detectar cara ~10 veces/seg a 30fps, no cada fotograma
+  const DETECT_EVERY_N_FRAMES = 6; // en CPU es más lento; detectar cara ~5 veces/seg a 30fps
   let cachedMask = null; // { facePath, eyesMouthPath } en coordenadas del canvas
 
   function getGlitchOverlay() {
