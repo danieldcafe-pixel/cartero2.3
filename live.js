@@ -20,7 +20,7 @@ window.VYBE_LIVE = (() => {
   let sparkTimeouts = [];
 
   const SPARK_COLORS = ["#5ce6ed", "#9377ff", "#ff6f91", "#ffd166", "#7be495"];
-  const SPARK_CHARS = ["✦", "❤", "🔥", "✨", "👏"];
+  const SPARK_CHARS = ["💎"];
   const MAX_CHAT_ROWS = 20;
 
   function clearTimers() {
