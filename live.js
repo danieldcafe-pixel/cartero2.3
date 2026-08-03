@@ -39,11 +39,11 @@ button { font: inherit; }
 
 /* ---------- Filtro embellecedor ---------- */
 #camera.beauty-filter {
-  filter: brightness(1.2) contrast(.8) saturate(1.35) blur(1.4px) sepia(.1);
+  filter: brightness(1.32) contrast(.68) saturate(1.55) blur(3.2px) sepia(.16);
   transition: filter .2s ease;
 }
 @keyframes filterGlitchOut {
-  0%   { filter: brightness(1.2) contrast(.8) saturate(1.35) blur(1.4px) sepia(.1); }
+  0%   { filter: brightness(1.32) contrast(.68) saturate(1.55) blur(3.2px) sepia(.16); }
   10%  { filter: brightness(1.55) contrast(1.45) saturate(.25) blur(3.5px) hue-rotate(12deg); }
   22%  { filter: brightness(.55) contrast(1.75) saturate(1.9) blur(0px); }
   34%  { filter: brightness(1.3) contrast(.7) blur(4.5px) hue-rotate(-10deg); }
@@ -241,6 +241,44 @@ button { font: inherit; }
   color: white;
   font-size: 22px;
   backdrop-filter: blur(12px);
+}
+.filter-toggle {
+  position: absolute;
+  z-index: 20;
+  top: calc(var(--safe-top) + 128px);
+  right: 16px;
+  width: 48px; height: 48px;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 17px;
+  background: var(--glass);
+  color: white;
+  font-size: 20px;
+  backdrop-filter: blur(12px);
+  opacity: .55;
+  transition: opacity .2s ease, box-shadow .2s ease;
+}
+.filter-toggle.active {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--cyan), 0 6px 16px rgba(92, 230, 237, .35);
+}
+.filter-badge {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .55px;
+  color: var(--cyan);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.filter-badge.show {
+  opacity: 1;
+  transform: none;
 }
 .chat-feed {
   position: absolute;
