@@ -62,7 +62,7 @@ window.VYBE_CAMERA = (() => {
 
     if (filterOn) {
       // 1) Base muy suavizada, más luminosa y cálida — la "piel más tersa".
-      ctx.filter = "blur(9px) brightness(1.22) saturate(1.3) contrast(0.92)";
+      ctx.filter = "blur(15px) brightness(1.32) saturate(1.5) contrast(0.85)";
       drawCovered(sourceVideo);
 
       // 2) Se repinta el fotograma nítido encima, en modo "overlay" y con
@@ -70,7 +70,7 @@ window.VYBE_CAMERA = (() => {
       // labios, mientras la piel (zonas más planas) se queda dominada por
       // la base suavizada de abajo.
       ctx.filter = "none";
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.38;
       ctx.globalCompositeOperation = "overlay";
       drawCovered(sourceVideo);
       ctx.globalAlpha = 1;
