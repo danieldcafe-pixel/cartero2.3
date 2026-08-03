@@ -13,6 +13,29 @@
   <title id="pageTitle">VYBE Live</title>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="vybeBeautyFilter" x="-20%" y="-20%" width="140%" height="140%">
+        <!-- Copia desenfocada y con un tinte cálido, tipo "efecto Orton" de -->
+        <!-- retrato: se mezcla en modo screen sobre la imagen nítida para -->
+        <!-- suavizar e iluminar la piel sin perder la definición de ojos, -->
+        <!-- cejas y labios. -->
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blurred"/>
+        <feColorMatrix in="blurred" type="matrix"
+          values="1.08 0 0 0 0.05
+                  0 1.04 0 0 0.03
+                  0 0 0.98 0 0.02
+                  0 0 0 1 0" result="blurredWarm"/>
+        <feBlend in="SourceGraphic" in2="blurredWarm" mode="screen" result="glow"/>
+        <feComponentTransfer in="glow">
+          <feFuncR type="linear" slope="0.94" intercept="0.05"/>
+          <feFuncG type="linear" slope="0.94" intercept="0.04"/>
+          <feFuncB type="linear" slope="0.92" intercept="0.05"/>
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+
   <main id="app">
     <video id="camera" autoplay muted playsinline></video>
     <div class="camera-grade"></div>
