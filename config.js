@@ -67,7 +67,7 @@ window.VYBE_CONFIG = {
   },
 
   /* ---------- NÚMEROS INICIALES ---------- */
-  startingViewers: 12,
+  startingViewers: 5,
   startingReactions: 0,
 
   /* ---------- FILTRO EMBELLECEDOR ----------
@@ -90,25 +90,14 @@ window.VYBE_CONFIG = {
     chat: []
   },
 
-  /* ---------- COMENTARIOS FALSOS DEL CHAT ---------- */
+  /* ---------- COMENTARIOS FIJOS DEL CHAT (attrezzo para rodaje) ----------
+     Exactamente 5, en este orden, sin aleatoriedad — para que se vean
+     igual en cada toma. Usuarios inventados para la producción. */
   comments: [
-    ["ava.rye", "This is wild."],
-    ["mileswest", "The picture looks amazing."],
-    ["jordynv", "Where are you right now?"],
-    ["nova.camera", "Just shared this with everyone."],
-    ["samuel.k", "No way this is happening live."],
-    ["tessframe", "Keep the camera rolling."],
-    ["bryceonair", "This stream is taking off."],
-    ["liv.marlow", "Can you show us more?"],
-    ["kaitlynx", "Best thing on my feed tonight."],
-    ["owenfield", "The sound is super clean."],
-    ["riley.motion", "People are joining fast."],
-    ["harperlane", "That was unreal."],
-    ["drewvisuals", "I got here at the perfect time."],
-    ["skylar.noir", "This deserves way more views."],
-    ["eastsideben", "Do not end the stream."],
-    ["maddieflux", "I just sent this to my group chat."],
-    ["noahdistrict", "The vibe is unreal."],
-    ["charlie.mp4", "This looks cinematic."]
+    ["puppylover80032", "You're stunning ✨✨"],
+    ["puppylover80031", "Hi, how are you? Look at your daughter! So smart"],
+    ["quantum.rae", "Omg yasss queeen"],
+    ["freethinker_lo", "The system is so broken, you are so right."],
+    ["kyle.realtalk", "750 an hour?!?! Lmao"]
   ]
 };
