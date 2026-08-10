@@ -103,7 +103,7 @@ window.VYBE_CAMERA = (() => {
   let glowCanvas = null;
   let glowCtx = null;
 
-  function drawSoftGlow(source, rect) {
+  function drawSoftGlow(targetCtx, source, rect) {
     if (!glowCanvas) {
       glowCanvas = document.createElement("canvas");
       glowCtx = glowCanvas.getContext("2d");
@@ -121,17 +121,67 @@ window.VYBE_CAMERA = (() => {
     glowCtx.clearRect(0, 0, gw, gh);
     glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
 
-    ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 0.85;
-    ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
-    ctx.globalAlpha = 1;
+    targetCtx.imageSmoothingEnabled = true;
+    targetCtx.globalAlpha = 0.85;
+    targetCtx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
+    targetCtx.globalAlpha = 1;
 
     // Brillo cálido encima (modo "screen": aclara sin lavar los blancos).
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = "rgba(255,222,200,0.18)";
-    ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
-    ctx.restore();
+    targetCtx.save();
+    targetCtx.globalCompositeOperation = "screen";
+    targetCtx.fillStyle = "rgba(255,222,200,0.18)";
+    targetCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    targetCtx.restore();
+  }
+
+  // ---------- Recorte con borde difuminado (sin efecto "máscara") ----------
+  // ctx.clip() con el óvalo de la cara corta con un borde 100% duro/recto
+  // — se nota como una máscara pegada encima de la cara. Para evitarlo,
+  // la piel suavizada se pinta en un canvas aparte (compositeCanvas) y
+  // se recorta con una máscara que primero se dibuja chiquita (eso ya
+  // difumina su contorno) y luego se estira — el mismo truco que usamos
+  // para el desenfoque, aplicado al borde del recorte.
+  let maskCanvas = null;
+  let maskCtx = null;
+  let compositeCanvas = null;
+  let compositeCtx = null;
+
+  function drawFeatheredFaceSmoothing(source, rect, path) {
+    if (!compositeCanvas) {
+      compositeCanvas = document.createElement("canvas");
+      compositeCtx = compositeCanvas.getContext("2d");
+    }
+    if (compositeCanvas.width !== canvasEl.width || compositeCanvas.height !== canvasEl.height) {
+      compositeCanvas.width = canvasEl.width;
+      compositeCanvas.height = canvasEl.height;
+    }
+    compositeCtx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+    drawSoftGlow(compositeCtx, source, rect);
+
+    if (!maskCanvas) {
+      maskCanvas = document.createElement("canvas");
+      maskCtx = maskCanvas.getContext("2d");
+    }
+    const md = 22; // más alto = borde más difuminado
+    const mw = Math.max(2, Math.round(canvasEl.width / md));
+    const mh = Math.max(2, Math.round(canvasEl.height / md));
+    if (maskCanvas.width !== mw || maskCanvas.height !== mh) {
+      maskCanvas.width = mw;
+      maskCanvas.height = mh;
+    }
+    maskCtx.clearRect(0, 0, mw, mh);
+    maskCtx.save();
+    maskCtx.scale(mw / canvasEl.width, mh / canvasEl.height);
+    maskCtx.fillStyle = "#fff";
+    maskCtx.fill(path);
+    maskCtx.restore();
+
+    compositeCtx.globalCompositeOperation = "destination-in";
+    compositeCtx.imageSmoothingEnabled = true;
+    compositeCtx.drawImage(maskCanvas, 0, 0, mw, mh, 0, 0, compositeCanvas.width, compositeCanvas.height);
+    compositeCtx.globalCompositeOperation = "source-over";
+
+    ctx.drawImage(compositeCanvas, 0, 0);
   }
 
   // ---------- Respaldo mientras no hay datos de cara ----------
@@ -427,11 +477,9 @@ window.VYBE_CAMERA = (() => {
       // del óvalo de la cara para no acentuar el ruido de la cámara en
       // zonas donde no aporta nada.
       if (faceLandmarker && cachedMask) {
-        // 2) Suavizado de piel, fuerte, SOLO dentro del óvalo de la cara.
-        ctx.save();
-        ctx.clip(cachedMask.facePath);
-        drawSoftGlow(effectiveSource, rect);
-        ctx.restore();
+        // 2) Suavizado de piel, fuerte, con borde difuminado (no un
+        // recorte duro tipo "máscara") dentro del óvalo de la cara.
+        drawFeatheredFaceSmoothing(effectiveSource, rect, cachedMask.facePath);
 
         // 3) Se devuelve la nitidez total de ojos y boca por encima.
         ctx.save();
