@@ -50,9 +50,15 @@ window.VYBE_CAMERA = (() => {
     badgeHideTimer = null;
   }
 
+  let canvasDpr = 1; // radios de blur en px se calculan sobre el tamaño real
+                      // del canvas (más grande que la pantalla en móviles de
+                      // alta densidad), así que hay que escalarlos con esto
+                      // para que el desenfoque se vea igual de fuerte en
+                      // cualquier pantalla.
   function resizeCanvasToDisplaySize() {
     const rect = canvasEl.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
+    canvasDpr = dpr;
     const w = Math.max(1, Math.round(rect.width * dpr));
     const h = Math.max(1, Math.round(rect.height * dpr));
     if (canvasEl.width !== w || canvasEl.height !== h) {
@@ -129,7 +135,11 @@ window.VYBE_CAMERA = (() => {
       // 2) Glow cálido sobre TODA la imagen, en modo "screen" — esto es lo
       // que hace que el filtro se note siempre, incluso si la detección de
       // cara (paso 3) todavía está cargando o falla en el dispositivo.
-      ctx.filter = "blur(11px) brightness(1.35) saturate(1.35) contrast(0.94)";
+      // Los radios de blur se escalan por canvasDpr porque el canvas tiene
+      // tantos píxeles reales como devicePixelRatio × su tamaño en pantalla
+      // (p. ej. x3 en un iPhone) — sin esto, un blur "fuerte" en móvil de
+      // gama alta se ve casi invisible.
+      ctx.filter = `blur(${Math.round(11 * canvasDpr)}px) brightness(1.35) saturate(1.35) contrast(0.94)`;
       ctx.globalAlpha = 0.6;
       ctx.globalCompositeOperation = "screen";
       drawCovered(sourceVideo, rect);
@@ -140,7 +150,7 @@ window.VYBE_CAMERA = (() => {
         // 3) Suavizado extra, más fuerte, SOLO dentro del óvalo de la cara.
         ctx.save();
         ctx.clip(cachedMask.facePath);
-        ctx.filter = "blur(14px) brightness(1.12) saturate(1.15)";
+        ctx.filter = `blur(${Math.round(14 * canvasDpr)}px) brightness(1.12) saturate(1.15)`;
         ctx.globalAlpha = 0.55;
         drawCovered(sourceVideo, rect);
         ctx.globalAlpha = 1;
