@@ -74,11 +74,22 @@ window.VYBE_CAMERA = (() => {
     if (!sourceVideo || sourceVideo.readyState < 2 || !ctx) return;
     resizeCanvasToDisplaySize();
 
-    const rect = coverRect(sourceVideo);
+    // Si jeeliz (moldeado de ojos/mandíbula) está listo, usamos su canvas
+    // — ya trae el video de fondo más la cara deformada — en vez del
+    // video crudo. Si todavía está cargando o falló, seguimos con el
+    // video normal sin que se note ningún corte.
+    let effectiveSource = sourceVideo;
+    if (window.VYBE_FACE_WARP) {
+      window.VYBE_FACE_WARP.resize(canvasEl.width, canvasEl.height);
+      const warped = window.VYBE_FACE_WARP.getCanvas();
+      if (warped) effectiveSource = warped;
+    }
+
+    const rect = coverRect(effectiveSource);
     if (!rect) return;
 
     ctx.filter = "none";
-    drawCovered(sourceVideo, rect);
+    drawCovered(effectiveSource, rect);
 
     if (filterOn) {
       drawBeautyGlow();
@@ -179,6 +190,10 @@ window.VYBE_CAMERA = (() => {
     sourceVideo.srcObject = stream;
     canvasElement.classList.toggle("mirror", facing === "user");
     await sourceVideo.play();
+
+    if (window.VYBE_FACE_WARP) {
+      window.VYBE_FACE_WARP.init(sourceVideo);
+    }
 
     if (!rafId) {
       renderLoop();
