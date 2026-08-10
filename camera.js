@@ -126,28 +126,32 @@ window.VYBE_CAMERA = (() => {
         updateFaceMask(rect);
       }
 
+      // 2) Glow cálido sobre TODA la imagen, en modo "screen" — esto es lo
+      // que hace que el filtro se note siempre, incluso si la detección de
+      // cara (paso 3) todavía está cargando o falla en el dispositivo.
+      ctx.filter = "blur(11px) brightness(1.35) saturate(1.35) contrast(0.94)";
+      ctx.globalAlpha = 0.6;
+      ctx.globalCompositeOperation = "screen";
+      drawCovered(sourceVideo, rect);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+
       if (faceLandmarker && cachedMask) {
-        // 2) Suavizado SOLO dentro del óvalo de la cara.
+        // 3) Suavizado extra, más fuerte, SOLO dentro del óvalo de la cara.
         ctx.save();
         ctx.clip(cachedMask.facePath);
-        ctx.filter = "blur(9px) brightness(1.18) saturate(1.28) contrast(0.92)";
-        drawCovered(sourceVideo, rect);
-        ctx.restore();
-
-        // 3) Se devuelve la nitidez de ojos y boca por encima del suavizado.
-        ctx.save();
-        ctx.clip(cachedMask.eyesMouthPath);
-        ctx.filter = "brightness(1.06) saturate(1.1)"; // ojos/labios un poco más vivos
-        drawCovered(sourceVideo, rect);
-        ctx.restore();
-      } else {
-        // Detección facial aún no disponible (cargando o falló): efecto
-        // de reserva sobre toda la imagen, para no dejar la cámara sin
-        // ningún filtro mientras carga.
-        ctx.filter = "blur(6px) brightness(1.15) saturate(1.2)";
-        ctx.globalAlpha = 0.45;
+        ctx.filter = "blur(14px) brightness(1.12) saturate(1.15)";
+        ctx.globalAlpha = 0.55;
         drawCovered(sourceVideo, rect);
         ctx.globalAlpha = 1;
+        ctx.restore();
+
+        // 4) Se devuelve la nitidez de ojos y boca por encima del suavizado.
+        ctx.save();
+        ctx.clip(cachedMask.eyesMouthPath);
+        ctx.filter = "brightness(1.06) saturate(1.1) contrast(1.03)";
+        drawCovered(sourceVideo, rect);
+        ctx.restore();
       }
     }
 
