@@ -9,9 +9,9 @@ window.VYBE_CONFIG = {
 
   /* ---------- MARCA / APP ---------- */
   brand: {
-    letter: "V",              // letra/inicial del logo circular
-    name: "VYBE",             // nombre corto (wordmark de la pantalla de inicio)
-    label: "VYBE / LIVE",     // texto de la esquina superior izquierda durante la emisión
+    letter: "",               // letra/inicial del logo circular (vacío = invisible, pero clicable)
+    name: "",                 // nombre corto (wordmark de la pantalla de inicio)
+    label: "",                // texto de la esquina superior izquierda durante la emisión
     pageTitle: "VYBE Live",   // título de la pestaña del navegador
     manifestName: "VYBE Live",     // nombre completo (Home Screen / manifest)
     manifestShortName: "VYBE",     // nombre corto (debajo del icono en Home Screen)
@@ -40,9 +40,9 @@ window.VYBE_CONFIG = {
   },
 
   /* ---------- TARJETA DEL CREADOR ---------- */
-  displayName: "Mara Vale",
-  handle: "@maravale",
-  location: "Los Angeles",
+  displayName: "Helen Wildson",
+  handle: "@helenwildson",
+  location: "San Francisco",
 
   /* ---------- TELEMETRÍA (fila de indicadores) ---------- */
   telemetry: {

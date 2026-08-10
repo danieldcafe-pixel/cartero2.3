@@ -113,10 +113,15 @@
     elements.themeColorMeta.setAttribute("content", config.brand.themeColor);
     elements.appleTitleMeta.setAttribute("content", config.brand.manifestShortName);
 
-    // Marca
+    // Marca — si la letra/el texto quedan vacíos, el ícono/etiqueta se
+    // hacen invisibles (pero siguen ahí y clicables, para poder seguir
+    // abriendo ajustes con una pulsación larga y traerlos de vuelta
+    // escribiendo algo en Ajustes → Marca cuando haga falta).
     elements.brandIcon.textContent = config.brand.letter;
+    elements.brandIcon.classList.toggle("is-empty", !config.brand.letter);
     elements.wordmark.textContent = config.brand.name;
     elements.miniLogo.textContent = config.brand.letter;
+    elements.miniLogo.classList.toggle("is-empty", !config.brand.letter);
     elements.brandLabel.textContent = config.brand.label;
 
     // Pantalla de inicio
