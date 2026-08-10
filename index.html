@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="VYBE" id="appleTitleMeta">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icon.svg">
-  <link rel="stylesheet" href="style.css?v=1.6.12">
+  <link rel="stylesheet" href="style.css?v=1.6.13">
   <title id="pageTitle">VYBE Live</title>
 </head>
 <body>
@@ -285,16 +285,17 @@
     </div>
   </main>
 
-  <script src="config.js?v=1.6.12"></script>
-  <script src="camera.js?v=1.6.12"></script>
-  <script src="live.js?v=1.6.12"></script>
-  <script src="app.js?v=1.6.12"></script>
+  <script src="config.js?v=1.6.13"></script>
+  <script src="camera.js?v=1.6.13"></script>
+  <script src="live.js?v=1.6.13"></script>
+  <script src="app.js?v=1.6.13"></script>
   <script type="module">
     // Detección facial real (MediaPipe) para que el filtro embellecedor
-    // sepa dónde está la piel y no toque ojos/labios. Se carga desde un
-    // CDN — necesita conexión a internet la primera vez que se abra la
-    // app (el modelo se cachea después). Si falla (sin conexión, etc.),
-    // camera.js cae de vuelta al desenfoque simple de toda la imagen.
+    // sepa dónde está la piel y no toque ojos/labios. El motor (WASM) se
+    // carga de un CDN, pero el modelo (unos 3.6MB) se sirve desde este
+    // mismo repo en vez de storage.googleapis.com — ese dominio se
+    // quedaba colgado indefinidamente en algunas redes/dispositivos. Si
+    // aun así falla, camera.js cae de vuelta al efecto de respaldo.
     import {
       FilesetResolver,
       FaceLandmarker
@@ -306,8 +307,7 @@
       );
       const landmarker = await FaceLandmarker.createFromOptions(fileset, {
         baseOptions: {
-          modelAssetPath:
-            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+          modelAssetPath: "mediapipe/face_landmarker.task",
           delegate: "CPU"
         },
         runningMode: "VIDEO",

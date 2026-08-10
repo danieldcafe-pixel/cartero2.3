@@ -127,35 +127,16 @@ window.VYBE_CAMERA = (() => {
   // ---------- Respaldo mientras no hay datos de cara ----------
   // Si la detección facial (MediaPipe) todavía está cargando, va lenta,
   // o directamente no funciona en este dispositivo/red, esto asegura que
-  // el filtro se vea igual desde el primer segundo: un brillo cálido y un
-  // desenfoque MUY leve sobre toda la imagen (no tan fuerte como el
-  // suavizado de piel real, para no volver borroso el fondo). En cuanto
-  // la detección facial esté lista, deja de usarse y entra el suavizado
-  // preciso + el moldeado de ojos/mandíbula.
-  function drawWholeFrameFallback(source, rect) {
-    if (!glowCanvas) {
-      glowCanvas = document.createElement("canvas");
-      glowCtx = glowCanvas.getContext("2d");
-    }
-    const downscale = 12;
-    const gw = Math.max(2, Math.round(canvasEl.width / downscale));
-    const gh = Math.max(2, Math.round(canvasEl.height / downscale));
-    if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
-      glowCanvas.width = gw;
-      glowCanvas.height = gh;
-    }
-    const s = gw / canvasEl.width;
-    glowCtx.clearRect(0, 0, gw, gh);
-    glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 0.4;
-    ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
-    ctx.globalAlpha = 1;
-
+  // el filtro se vea igual desde el primer segundo. SIN desenfoque —
+  // cualquier blur, por leve que sea, se termina leyendo como "cámara
+  // desenfocada". Es solo un cambio de color: más brillo y calidez,
+  // manteniendo la imagen 100% nítida. En cuanto la detección facial
+  // esté lista, deja de usarse y entra el suavizado preciso + el
+  // moldeado de ojos/mandíbula.
+  function drawWholeFrameFallback() {
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = "rgba(255,222,200,0.16)";
+    ctx.fillStyle = "rgba(255,225,205,0.22)";
     ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.restore();
   }
@@ -451,7 +432,7 @@ window.VYBE_CAMERA = (() => {
         // Sin datos de cara todavía (MediaPipe cargando/lento/sin
         // soporte en este dispositivo) — efecto de respaldo sobre toda
         // la imagen para que el filtro se note desde ya.
-        drawWholeFrameFallback(effectiveSource, rect);
+        drawWholeFrameFallback();
       }
     }
 
