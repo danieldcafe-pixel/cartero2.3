@@ -98,7 +98,9 @@ window.VYBE_CAMERA = (() => {
       glowCanvas = document.createElement("canvas");
       glowCtx = glowCanvas.getContext("2d");
     }
-    const downscale = 26; // suavizado de piel, no un desenfoque total del cuadro
+    // Como esto solo se dibuja dentro del recorte de la cara (nunca toca
+    // el fondo), se puede desenfocar bastante fuerte sin miedo.
+    const downscale = 42;
     const gw = Math.max(2, Math.round(canvasEl.width / downscale));
     const gh = Math.max(2, Math.round(canvasEl.height / downscale));
     if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
@@ -110,14 +112,16 @@ window.VYBE_CAMERA = (() => {
     glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
 
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.92;
     ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
     ctx.globalAlpha = 1;
 
-    // Brillo cálido encima (modo "screen": aclara sin lavar los blancos).
+    // Brillo cálido, apenas perceptible — un tinte más fuerte terminaba
+    // acentuando el ruido/grano de la cámara en vez de verse como piel
+    // suave.
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = "rgba(255,222,200,0.22)";
+    ctx.fillStyle = "rgba(255,222,200,0.1)";
     ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.restore();
   }
@@ -393,24 +397,17 @@ window.VYBE_CAMERA = (() => {
     drawCovered(effectiveSource, rect);
 
     if (filterOn) {
-      // 2) Tinte cálido MUY sutil sobre toda la imagen, sin desenfoque —
-      // el fondo, el pelo y la ropa se quedan nítidos. El filtro de
-      // belleza real viene del retoque de piel (paso 3) y el moldeado
-      // de ojos/mandíbula, no de emborronar todo el cuadro.
-      ctx.save();
-      ctx.globalCompositeOperation = "screen";
-      ctx.fillStyle = "rgba(255,222,200,0.12)";
-      ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
-      ctx.restore();
-
+      // El fondo se queda tal cual (nítido) — todo el efecto vive dentro
+      // del óvalo de la cara para no acentuar el ruido de la cámara en
+      // zonas donde no aporta nada.
       if (faceLandmarker && cachedMask) {
-        // 3) Suavizado de piel SOLO dentro del óvalo de la cara.
+        // 2) Suavizado de piel, fuerte, SOLO dentro del óvalo de la cara.
         ctx.save();
         ctx.clip(cachedMask.facePath);
         drawSoftGlow(effectiveSource, rect);
         ctx.restore();
 
-        // 4) Se devuelve la nitidez total de ojos y boca por encima.
+        // 3) Se devuelve la nitidez total de ojos y boca por encima.
         ctx.save();
         ctx.clip(cachedMask.eyesMouthPath);
         ctx.filter = "none";
