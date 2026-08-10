@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="VYBE" id="appleTitleMeta">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icon.svg">
-  <link rel="stylesheet" href="style.css?v=1.6.13">
+  <link rel="stylesheet" href="style.css?v=1.6.14">
   <title id="pageTitle">VYBE Live</title>
 </head>
 <body>
@@ -285,10 +285,10 @@
     </div>
   </main>
 
-  <script src="config.js?v=1.6.13"></script>
-  <script src="camera.js?v=1.6.13"></script>
-  <script src="live.js?v=1.6.13"></script>
-  <script src="app.js?v=1.6.13"></script>
+  <script src="config.js?v=1.6.14"></script>
+  <script src="camera.js?v=1.6.14"></script>
+  <script src="live.js?v=1.6.14"></script>
+  <script src="app.js?v=1.6.14"></script>
   <script type="module">
     // Detección facial real (MediaPipe) para que el filtro embellecedor
     // sepa dónde está la piel y no toque ojos/labios. El motor (WASM) se
@@ -301,10 +301,13 @@
       FaceLandmarker
     } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
+    window.__vybeMpStage = "iniciando";
     window.__vybeFaceLandmarkerReady = (async () => {
+      window.__vybeMpStage = "bajando motor WASM (jsdelivr)";
       const fileset = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
       );
+      window.__vybeMpStage = "creando detector (modelo propio)";
       const landmarker = await FaceLandmarker.createFromOptions(fileset, {
         baseOptions: {
           modelAssetPath: "mediapipe/face_landmarker.task",
@@ -313,9 +316,11 @@
         runningMode: "VIDEO",
         numFaces: 1
       });
+      window.__vybeMpStage = "listo";
       window.VYBE_FACE_LANDMARKER = landmarker;
       return landmarker;
     })().catch((error) => {
+      window.__vybeMpStage = "error";
       console.error("No se pudo cargar la detección facial:", error);
       window.__vybeFaceLandmarkerError = String((error && (error.message || error.name)) || error || "error desconocido");
       return null;
