@@ -31,8 +31,18 @@ window.VYBE_CAMERA = (() => {
   const LEFT_CHEEK = 234;
   const RIGHT_CHEEK = 454;
 
+  // BUG encontrado: camera.js (script normal) se ejecuta ANTES que el
+  // <script type="module"> de index.html que crea window.__vybeFace-
+  // LandmarkerReady (los módulos siempre se difieren hasta después de
+  // los scripts normales). Por eso el chequeo de abajo siempre daba
+  // falso y nunca nos enterábamos cuando MediaPipe terminaba de cargar,
+  // aunque cargara bien. Se resuelve revisando en cada fotograma hasta
+  // que la promesa exista, en vez de solo una vez al principio.
   let faceLandmarker = null;
-  if (window.__vybeFaceLandmarkerReady) {
+  let landmarkerSubscribed = false;
+  function ensureFaceLandmarkerSubscription() {
+    if (landmarkerSubscribed || !window.__vybeFaceLandmarkerReady) return;
+    landmarkerSubscribed = true;
     window.__vybeFaceLandmarkerReady.then((lm) => { faceLandmarker = lm || null; });
   }
 
@@ -388,6 +398,7 @@ window.VYBE_CAMERA = (() => {
 
   function renderLoop() {
     rafId = requestAnimationFrame(renderLoop);
+    ensureFaceLandmarkerSubscription();
     if (!sourceVideo || sourceVideo.readyState < 2 || !ctx) return;
     resizeCanvasToDisplaySize();
 
