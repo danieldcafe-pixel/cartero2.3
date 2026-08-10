@@ -93,12 +93,12 @@ window.VYBE_CAMERA = (() => {
   let glowCanvas = null;
   let glowCtx = null;
 
-  function drawSoftGlow(source, rect, strong) {
+  function drawSoftGlow(source, rect) {
     if (!glowCanvas) {
       glowCanvas = document.createElement("canvas");
       glowCtx = glowCanvas.getContext("2d");
     }
-    const downscale = strong ? 34 : 20; // más alto = más desenfoque
+    const downscale = 26; // suavizado de piel, no un desenfoque total del cuadro
     const gw = Math.max(2, Math.round(canvasEl.width / downscale));
     const gh = Math.max(2, Math.round(canvasEl.height / downscale));
     if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
@@ -110,14 +110,14 @@ window.VYBE_CAMERA = (() => {
     glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
 
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = strong ? 0.9 : 0.75;
+    ctx.globalAlpha = 0.6;
     ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
     ctx.globalAlpha = 1;
 
     // Brillo cálido encima (modo "screen": aclara sin lavar los blancos).
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = strong ? "rgba(255,222,200,0.34)" : "rgba(255,222,200,0.22)";
+    ctx.fillStyle = "rgba(255,222,200,0.22)";
     ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.restore();
   }
@@ -393,16 +393,21 @@ window.VYBE_CAMERA = (() => {
     drawCovered(effectiveSource, rect);
 
     if (filterOn) {
-      // 2) Glow/desenfoque fuerte sobre TODA la imagen — esto es lo que
-      // hace que el filtro se note siempre, incluso si la detección de
-      // cara (paso 3) todavía está cargando o falla en el dispositivo.
-      drawSoftGlow(effectiveSource, rect, false);
+      // 2) Tinte cálido MUY sutil sobre toda la imagen, sin desenfoque —
+      // el fondo, el pelo y la ropa se quedan nítidos. El filtro de
+      // belleza real viene del retoque de piel (paso 3) y el moldeado
+      // de ojos/mandíbula, no de emborronar todo el cuadro.
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.fillStyle = "rgba(255,222,200,0.12)";
+      ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+      ctx.restore();
 
       if (faceLandmarker && cachedMask) {
-        // 3) Suavizado extra, mucho más fuerte, SOLO dentro del óvalo de cara.
+        // 3) Suavizado de piel SOLO dentro del óvalo de la cara.
         ctx.save();
         ctx.clip(cachedMask.facePath);
-        drawSoftGlow(effectiveSource, rect, true);
+        drawSoftGlow(effectiveSource, rect);
         ctx.restore();
 
         // 4) Se devuelve la nitidez total de ojos y boca por encima.
