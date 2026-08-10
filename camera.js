@@ -435,8 +435,11 @@ window.VYBE_CAMERA = (() => {
         debugText = "MP: OK, cara NO";
         debugColor = "#ff5252";
       }
+    } else if (window.__vybeFaceLandmarkerError) {
+      debugText = "ERROR: " + window.__vybeFaceLandmarkerError.slice(0, 60);
+      debugColor = "#ff5252";
     } else {
-      debugText = "MP: cargando/fallo";
+      debugText = "MP: cargando todavía...";
       debugColor = "#ffb300";
     }
     ctx.save();
