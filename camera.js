@@ -100,7 +100,7 @@ window.VYBE_CAMERA = (() => {
     }
     // Como esto solo se dibuja dentro del recorte de la cara (nunca toca
     // el fondo), se puede desenfocar bastante fuerte sin miedo.
-    const downscale = 64; // DIAGNÓSTICO: exageradamente fuerte a propósito
+    const downscale = 40; // solo se dibuja dentro de la cara, puede ser fuerte
     const gw = Math.max(2, Math.round(canvasEl.width / downscale));
     const gh = Math.max(2, Math.round(canvasEl.height / downscale));
     if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
@@ -112,16 +112,50 @@ window.VYBE_CAMERA = (() => {
     glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
 
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.85;
     ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
     ctx.globalAlpha = 1;
 
-    // Brillo cálido, apenas perceptible — un tinte más fuerte terminaba
-    // acentuando el ruido/grano de la cámara en vez de verse como piel
-    // suave.
+    // Brillo cálido encima (modo "screen": aclara sin lavar los blancos).
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = "rgba(255,222,200,0.28)"; // DIAGNÓSTICO: más fuerte a propósito
+    ctx.fillStyle = "rgba(255,222,200,0.18)";
+    ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    ctx.restore();
+  }
+
+  // ---------- Respaldo mientras no hay datos de cara ----------
+  // Si la detección facial (MediaPipe) todavía está cargando, va lenta,
+  // o directamente no funciona en este dispositivo/red, esto asegura que
+  // el filtro se vea igual desde el primer segundo: un brillo cálido y un
+  // desenfoque MUY leve sobre toda la imagen (no tan fuerte como el
+  // suavizado de piel real, para no volver borroso el fondo). En cuanto
+  // la detección facial esté lista, deja de usarse y entra el suavizado
+  // preciso + el moldeado de ojos/mandíbula.
+  function drawWholeFrameFallback(source, rect) {
+    if (!glowCanvas) {
+      glowCanvas = document.createElement("canvas");
+      glowCtx = glowCanvas.getContext("2d");
+    }
+    const downscale = 12;
+    const gw = Math.max(2, Math.round(canvasEl.width / downscale));
+    const gh = Math.max(2, Math.round(canvasEl.height / downscale));
+    if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
+      glowCanvas.width = gw;
+      glowCanvas.height = gh;
+    }
+    const s = gw / canvasEl.width;
+    glowCtx.clearRect(0, 0, gw, gh);
+    glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
+    ctx.globalAlpha = 1;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = "rgba(255,222,200,0.16)";
     ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.restore();
   }
@@ -147,8 +181,8 @@ window.VYBE_CAMERA = (() => {
   // un canvas oculto, y el resultado se usa como si fuera el video de
   // entrada para todo lo demás (desenfoque, brillo, etc.).
   const MAX_WARP_POINTS = 6;
-  const EYE_ENLARGE_AMOUNT = 0.62; // DIAGNÓSTICO: exagerado a propósito
-  const JAW_SLIM_AMOUNT = 0.45;    // DIAGNÓSTICO: exagerado a propósito
+  const EYE_ENLARGE_AMOUNT = 0.42;
+  const JAW_SLIM_AMOUNT = 0.3;
 
   let warpCanvas = null;
   let gl = null;
@@ -413,6 +447,11 @@ window.VYBE_CAMERA = (() => {
         ctx.filter = "none";
         drawCovered(effectiveSource, rect);
         ctx.restore();
+      } else {
+        // Sin datos de cara todavía (MediaPipe cargando/lento/sin
+        // soporte en este dispositivo) — efecto de respaldo sobre toda
+        // la imagen para que el filtro se note desde ya.
+        drawWholeFrameFallback(effectiveSource, rect);
       }
     }
 
