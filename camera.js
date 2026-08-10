@@ -24,6 +24,12 @@ window.VYBE_CAMERA = (() => {
   const LEFT_EYE = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
   const RIGHT_EYE = [263, 249, 390, 373, 374, 380, 381, 382, 362, 398, 384, 385, 386, 387, 388, 466];
   const LIPS_OUTER = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 409, 270, 269, 267, 0, 37, 39, 40, 185];
+  // Puntos de referencia para el moldeado (ojos más grandes, cara más
+  // afinada): mejilla/mandíbula izquierda y derecha, en el punto más
+  // ancho de la cara — los que se usan típicamente para medir "ancho
+  // facial" en apps de retoque.
+  const LEFT_CHEEK = 234;
+  const RIGHT_CHEEK = 454;
 
   let faceLandmarker = null;
   if (window.__vybeFaceLandmarkerReady) {
@@ -62,7 +68,8 @@ window.VYBE_CAMERA = (() => {
   }
 
   function coverRect(source) {
-    const sw = source.videoWidth, sh = source.videoHeight;
+    const sw = source.videoWidth || source.width;
+    const sh = source.videoHeight || source.height;
     if (!sw || !sh) return null;
     const cw = canvasEl.width, ch = canvasEl.height;
     const scale = Math.max(cw / sw, ch / sh);
@@ -80,13 +87,13 @@ window.VYBE_CAMERA = (() => {
   // ctx.filter con blur() tiene soporte poco fiable en Safari/iOS: en
   // algunos dispositivos simplemente no dibuja nada, lo que dejaba el
   // filtro embellecedor sin ningún efecto visible. Esta técnica dibuja el
-  // video en un canvas diminuto (eso ya lo desenfoca al perder detalle) y
+  // origen en un canvas diminuto (eso ya lo desenfoca al perder detalle) y
   // luego lo estira de vuelta a tamaño completo — funciona igual en
   // cualquier navegador porque solo usa drawImage.
   let glowCanvas = null;
   let glowCtx = null;
 
-  function drawSoftGlow(rect, strong) {
+  function drawSoftGlow(source, rect, strong) {
     if (!glowCanvas) {
       glowCanvas = document.createElement("canvas");
       glowCtx = glowCanvas.getContext("2d");
@@ -100,7 +107,7 @@ window.VYBE_CAMERA = (() => {
     }
     const s = gw / canvasEl.width;
     glowCtx.clearRect(0, 0, gw, gh);
-    glowCtx.drawImage(sourceVideo, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
+    glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
 
     ctx.imageSmoothingEnabled = true;
     ctx.globalAlpha = strong ? 0.9 : 0.75;
@@ -127,6 +134,218 @@ window.VYBE_CAMERA = (() => {
     return path;
   }
 
+  // ---------- Moldeado geométrico (ojos más grandes, cara más afinada) ----------
+  // Esto NO se puede hacer con canvas 2D (que solo pinta píxeles, no los
+  // desplaza) — hace falta un shader WebGL que, para cada píxel de salida,
+  // decida de qué otro punto de la imagen original tomar el color. Cerca
+  // de cada ojo "atrae" la muestra hacia el centro (agranda esa zona); en
+  // las mejillas/mandíbula la "aleja" (la encoge). Se renderiza aparte, en
+  // un canvas oculto, y el resultado se usa como si fuera el video de
+  // entrada para todo lo demás (desenfoque, brillo, etc.).
+  const MAX_WARP_POINTS = 6;
+  const EYE_ENLARGE_AMOUNT = 0.38;
+  const JAW_SLIM_AMOUNT = 0.26;
+
+  let warpCanvas = null;
+  let gl = null;
+  let glFailed = false;
+  let warpProgram = null;
+  let warpTexture = null;
+  let warpUniforms = null;
+  let warpParams = null; // { centers: Float32Array(12), radii: Float32Array(6), amounts: Float32Array(6), count }
+
+  function compileShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error("Shader del moldeado facial:", gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  function initWarpGL() {
+    if (glFailed) return false;
+    if (gl) return true;
+
+    warpCanvas = document.createElement("canvas");
+    gl = warpCanvas.getContext("webgl", { premultipliedAlpha: false })
+      || warpCanvas.getContext("experimental-webgl", { premultipliedAlpha: false });
+    if (!gl) {
+      glFailed = true;
+      return false;
+    }
+
+    const vertexSrc = `
+      attribute vec2 aPos;
+      varying vec2 vUv;
+      void main() {
+        vUv = aPos * 0.5 + 0.5;
+        gl_Position = vec4(aPos, 0.0, 1.0);
+      }
+    `;
+    const fragmentSrc = `
+      precision mediump float;
+      varying vec2 vUv;
+      uniform sampler2D uTex;
+      uniform vec2 uCenters[${MAX_WARP_POINTS}];
+      uniform float uRadii[${MAX_WARP_POINTS}];
+      uniform float uAmounts[${MAX_WARP_POINTS}];
+      uniform int uCount;
+      uniform float uAspect;
+
+      void main() {
+        vec2 uv = vUv;
+        for (int i = 0; i < ${MAX_WARP_POINTS}; i++) {
+          if (i >= uCount) break;
+          float radius = uRadii[i];
+          if (radius <= 0.0) continue;
+          vec2 center = uCenters[i];
+          vec2 d = uv - center;
+          vec2 dPhys = vec2(d.x, d.y / uAspect);
+          float dist = length(dPhys);
+          if (dist < radius) {
+            float percent = 1.0 - dist / radius;
+            float theta = percent * percent * uAmounts[i];
+            d *= (1.0 - theta);
+            uv = center + d;
+          }
+        }
+        gl_FragColor = texture2D(uTex, uv);
+      }
+    `;
+
+    const vertexShader = compileShader(gl.VERTEX_SHADER, vertexSrc);
+    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentSrc);
+    if (!vertexShader || !fragmentShader) {
+      glFailed = true;
+      return false;
+    }
+
+    warpProgram = gl.createProgram();
+    gl.attachShader(warpProgram, vertexShader);
+    gl.attachShader(warpProgram, fragmentShader);
+    gl.linkProgram(warpProgram);
+    if (!gl.getProgramParameter(warpProgram, gl.LINK_STATUS)) {
+      console.error("No se pudo enlazar el shader del moldeado facial:", gl.getProgramInfoLog(warpProgram));
+      glFailed = true;
+      return false;
+    }
+
+    const quad = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+    gl.useProgram(warpProgram);
+    const aPos = gl.getAttribLocation(warpProgram, "aPos");
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    warpTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, warpTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+    warpUniforms = {
+      tex: gl.getUniformLocation(warpProgram, "uTex"),
+      centers: gl.getUniformLocation(warpProgram, "uCenters"),
+      radii: gl.getUniformLocation(warpProgram, "uRadii"),
+      amounts: gl.getUniformLocation(warpProgram, "uAmounts"),
+      count: gl.getUniformLocation(warpProgram, "uCount"),
+      aspect: gl.getUniformLocation(warpProgram, "uAspect")
+    };
+
+    return true;
+  }
+
+  function averageLandmark(landmarks, indices) {
+    let x = 0, y = 0;
+    indices.forEach((i) => { x += landmarks[i].x; y += landmarks[i].y; });
+    return { x: x / indices.length, y: y / indices.length };
+  }
+
+  function landmarkSpan(landmarks, indices) {
+    let minX = 1, maxX = 0, minY = 1, maxY = 0;
+    indices.forEach((i) => {
+      const p = landmarks[i];
+      minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+    });
+    return Math.max(maxX - minX, maxY - minY);
+  }
+
+  // MediaPipe da landmark.y con origen arriba (0 = arriba, 1 = abajo);
+  // el shader trabaja en espacio UV de WebGL con origen abajo, así que se
+  // invierte una sola vez acá en vez de por píxel dentro del shader.
+  function toUvPoint(p) {
+    return { x: p.x, y: 1 - p.y };
+  }
+
+  function computeWarpParams(landmarks) {
+    const leftEye = toUvPoint(averageLandmark(landmarks, LEFT_EYE));
+    const rightEye = toUvPoint(averageLandmark(landmarks, RIGHT_EYE));
+    const eyeSpan = Math.max(landmarkSpan(landmarks, LEFT_EYE), landmarkSpan(landmarks, RIGHT_EYE));
+    const eyeRadius = eyeSpan * 2.1;
+
+    const leftCheek = toUvPoint(landmarks[LEFT_CHEEK]);
+    const rightCheek = toUvPoint(landmarks[RIGHT_CHEEK]);
+    const jawRadius = eyeSpan * 3.6;
+
+    const centers = new Float32Array(MAX_WARP_POINTS * 2);
+    const radii = new Float32Array(MAX_WARP_POINTS);
+    const amounts = new Float32Array(MAX_WARP_POINTS);
+
+    const points = [
+      [leftEye, eyeRadius, EYE_ENLARGE_AMOUNT],
+      [rightEye, eyeRadius, EYE_ENLARGE_AMOUNT],
+      [leftCheek, jawRadius, -JAW_SLIM_AMOUNT],
+      [rightCheek, jawRadius, -JAW_SLIM_AMOUNT]
+    ];
+    points.forEach(([point, radius, amount], i) => {
+      centers[i * 2] = point.x;
+      centers[i * 2 + 1] = point.y;
+      radii[i] = radius;
+      amounts[i] = amount;
+    });
+
+    warpParams = { centers, radii, amounts, count: points.length };
+  }
+
+  function renderWarpedFrame() {
+    if (!warpParams) return null;
+    if (!initWarpGL()) return null;
+
+    const vw = sourceVideo.videoWidth, vh = sourceVideo.videoHeight;
+    if (!vw || !vh) return null;
+    if (warpCanvas.width !== vw || warpCanvas.height !== vh) {
+      warpCanvas.width = vw;
+      warpCanvas.height = vh;
+    }
+
+    gl.viewport(0, 0, vw, vh);
+    gl.useProgram(warpProgram);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, warpTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceVideo);
+    gl.uniform1i(warpUniforms.tex, 0);
+
+    gl.uniform2fv(warpUniforms.centers, warpParams.centers);
+    gl.uniform1fv(warpUniforms.radii, warpParams.radii);
+    gl.uniform1fv(warpUniforms.amounts, warpParams.amounts);
+    gl.uniform1i(warpUniforms.count, warpParams.count);
+    gl.uniform1f(warpUniforms.aspect, vw / vh);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    return warpCanvas;
+  }
+
   function updateFaceMask(rect) {
     if (!faceLandmarker || !sourceVideo || sourceVideo.readyState < 2) return;
     let result;
@@ -145,6 +364,7 @@ window.VYBE_CAMERA = (() => {
     eyesMouthPath.addPath(pathFromIndices(landmarks, LIPS_OUTER, rect));
 
     cachedMask = { facePath, eyesMouthPath };
+    computeWarpParams(landmarks);
   }
 
   function renderLoop() {
@@ -152,37 +372,44 @@ window.VYBE_CAMERA = (() => {
     if (!sourceVideo || sourceVideo.readyState < 2 || !ctx) return;
     resizeCanvasToDisplaySize();
 
-    const rect = coverRect(sourceVideo);
-    if (!rect) return;
-
-    // 1) Base nítida, siempre.
-    ctx.filter = "none";
-    drawCovered(sourceVideo, rect);
+    let effectiveSource = sourceVideo;
 
     if (filterOn) {
       frameCounter++;
       if (faceLandmarker && frameCounter % DETECT_EVERY_N_FRAMES === 0) {
-        updateFaceMask(rect);
+        updateFaceMask(coverRect(sourceVideo));
       }
+      if (faceLandmarker && warpParams) {
+        const warped = renderWarpedFrame();
+        if (warped) effectiveSource = warped;
+      }
+    }
 
+    const rect = coverRect(effectiveSource);
+    if (!rect) return;
+
+    // 1) Base nítida (ya con ojos/mandíbula moldeados si hay detección).
+    ctx.filter = "none";
+    drawCovered(effectiveSource, rect);
+
+    if (filterOn) {
       // 2) Glow/desenfoque fuerte sobre TODA la imagen — esto es lo que
       // hace que el filtro se note siempre, incluso si la detección de
       // cara (paso 3) todavía está cargando o falla en el dispositivo.
-      ctx.filter = "none";
-      drawSoftGlow(rect, false);
+      drawSoftGlow(effectiveSource, rect, false);
 
       if (faceLandmarker && cachedMask) {
         // 3) Suavizado extra, mucho más fuerte, SOLO dentro del óvalo de cara.
         ctx.save();
         ctx.clip(cachedMask.facePath);
-        drawSoftGlow(rect, true);
+        drawSoftGlow(effectiveSource, rect, true);
         ctx.restore();
 
         // 4) Se devuelve la nitidez total de ojos y boca por encima.
         ctx.save();
         ctx.clip(cachedMask.eyesMouthPath);
         ctx.filter = "none";
-        drawCovered(sourceVideo, rect);
+        drawCovered(effectiveSource, rect);
         ctx.restore();
       }
     }
@@ -194,6 +421,7 @@ window.VYBE_CAMERA = (() => {
     clearFilterTimers();
     filterOn = false;
     cachedMask = null;
+    warpParams = null;
 
     const overlay = getGlitchOverlay();
     const badge = getFilterBadge();
@@ -248,6 +476,7 @@ window.VYBE_CAMERA = (() => {
     clearFilterTimers();
     filterOn = false;
     cachedMask = null;
+    warpParams = null;
     const overlay = getGlitchOverlay();
     const badge = getFilterBadge();
     canvasElement.classList.remove("beauty-filter", "filter-glitch");
@@ -295,6 +524,7 @@ window.VYBE_CAMERA = (() => {
   async function switchCamera(canvasElement) {
     facing = facing === "user" ? "environment" : "user";
     cachedMask = null;
+    warpParams = null;
     await start(canvasElement);
     return facing;
   }
