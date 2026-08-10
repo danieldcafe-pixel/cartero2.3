@@ -100,7 +100,7 @@ window.VYBE_CAMERA = (() => {
     }
     // Como esto solo se dibuja dentro del recorte de la cara (nunca toca
     // el fondo), se puede desenfocar bastante fuerte sin miedo.
-    const downscale = 42;
+    const downscale = 64; // DIAGNÓSTICO: exageradamente fuerte a propósito
     const gw = Math.max(2, Math.round(canvasEl.width / downscale));
     const gh = Math.max(2, Math.round(canvasEl.height / downscale));
     if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
@@ -112,7 +112,7 @@ window.VYBE_CAMERA = (() => {
     glowCtx.drawImage(source, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
 
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 0.92;
+    ctx.globalAlpha = 1;
     ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
     ctx.globalAlpha = 1;
 
@@ -121,7 +121,7 @@ window.VYBE_CAMERA = (() => {
     // suave.
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = "rgba(255,222,200,0.1)";
+    ctx.fillStyle = "rgba(255,222,200,0.28)"; // DIAGNÓSTICO: más fuerte a propósito
     ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
     ctx.restore();
   }
@@ -147,8 +147,8 @@ window.VYBE_CAMERA = (() => {
   // un canvas oculto, y el resultado se usa como si fuera el video de
   // entrada para todo lo demás (desenfoque, brillo, etc.).
   const MAX_WARP_POINTS = 6;
-  const EYE_ENLARGE_AMOUNT = 0.38;
-  const JAW_SLIM_AMOUNT = 0.26;
+  const EYE_ENLARGE_AMOUNT = 0.62; // DIAGNÓSTICO: exagerado a propósito
+  const JAW_SLIM_AMOUNT = 0.45;    // DIAGNÓSTICO: exagerado a propósito
 
   let warpCanvas = null;
   let gl = null;
