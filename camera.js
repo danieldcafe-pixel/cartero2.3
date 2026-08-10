@@ -417,6 +417,38 @@ window.VYBE_CAMERA = (() => {
     }
 
     ctx.filter = "none";
+
+    // ---------- DIAGNÓSTICO TEMPORAL ----------
+    // Indicador en la esquina para saber, con certeza, en qué paso se
+    // corta la cadena: si MediaPipe cargó y si está detectando la cara
+    // en este dispositivo. Se saca una vez que quede claro el problema.
+    let debugText = "MP: cargando";
+    let debugColor = "#999";
+    if (faceLandmarker === null && !window.__vybeFaceLandmarkerReady) {
+      debugText = "MP: sin promesa";
+      debugColor = "#999";
+    } else if (faceLandmarker) {
+      if (cachedMask) {
+        debugText = "MP: OK, cara SI";
+        debugColor = "#3ddc84";
+      } else {
+        debugText = "MP: OK, cara NO";
+        debugColor = "#ff5252";
+      }
+    } else {
+      debugText = "MP: cargando/fallo";
+      debugColor = "#ffb300";
+    }
+    ctx.save();
+    ctx.font = "bold 22px sans-serif";
+    ctx.textBaseline = "top";
+    const pad = 8;
+    const w = ctx.measureText(debugText).width + pad * 2;
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillRect(10, 10, w, 36);
+    ctx.fillStyle = debugColor;
+    ctx.fillText(debugText, 10 + pad, 16);
+    ctx.restore();
   }
 
   function turnFilterOff(canvasElement, options) {
