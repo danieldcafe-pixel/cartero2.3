@@ -440,14 +440,23 @@ window.VYBE_CAMERA = (() => {
       debugColor = "#ffb300";
     }
     ctx.save();
-    ctx.font = "bold 22px sans-serif";
+    // La cámara frontal se muestra en espejo (CSS scaleX(-1) sobre el
+    // canvas entero); sin esto el texto saldría invertido en pantalla.
+    if (canvasEl.classList.contains("mirror")) {
+      ctx.translate(canvasEl.width, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.font = "bold 28px sans-serif";
     ctx.textBaseline = "top";
-    const pad = 8;
+    const pad = 10;
     const w = ctx.measureText(debugText).width + pad * 2;
-    ctx.fillStyle = "rgba(0,0,0,0.65)";
-    ctx.fillRect(10, 10, w, 36);
+    // Porcentaje de la altura, no píxeles fijos, para caer siempre debajo
+    // de la cabecera y arriba del chat sin importar el tamaño de pantalla.
+    const y = canvasEl.height * 0.32;
+    ctx.fillStyle = "rgba(0,0,0,0.75)";
+    ctx.fillRect(10, y, w, 46);
     ctx.fillStyle = debugColor;
-    ctx.fillText(debugText, 10 + pad, 16);
+    ctx.fillText(debugText, 10 + pad, y + 8);
     ctx.restore();
   }
 
