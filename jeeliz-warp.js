@@ -96,21 +96,38 @@ window.VYBE_FACE_WARP = (() => {
     maskMaterial = build_maskMaterial();
 
     const loader = new THREE.BufferGeometryLoader();
-    loader.load("jeeliz/models/faceLowPoly.json", (geometry) => {
-      geometry.computeVertexNormals();
-      const mesh = new THREE.Mesh(geometry, maskMaterial);
-      mesh.frustumCulled = false;
-      mesh.scale.multiplyScalar(1.2);
-      mesh.position.set(0, 0.2, -0.5);
-      threeStuffs.faceObject.add(mesh);
-    });
+    loader.load(
+      "jeeliz/models/faceLowPoly.json",
+      (geometry) => {
+        geometry.computeVertexNormals();
+        const mesh = new THREE.Mesh(geometry, maskMaterial);
+        mesh.frustumCulled = false;
+        mesh.scale.multiplyScalar(1.2);
+        mesh.position.set(0, 0.2, -0.5);
+        threeStuffs.faceObject.add(mesh);
+        status = "listo";
+      },
+      undefined,
+      (error) => {
+        console.error("No se pudo cargar la malla de cara:", error);
+        status = "error: no cargó la malla 3D";
+        failed = true;
+      }
+    );
 
     threeCamera = JeelizThreeHelper.create_camera();
+  }
+
+  // ---------- DIAGNÓSTICO TEMPORAL ----------
+  let status = "sin iniciar";
+  function getStatus() {
+    return status;
   }
 
   function init(videoElement) {
     if (initStarted) return;
     initStarted = true;
+    status = "iniciando";
 
     jeelizCanvas = document.createElement("canvas");
     jeelizCanvas.width = 640;
@@ -123,9 +140,11 @@ window.VYBE_FACE_WARP = (() => {
       callbackReady: (errCode, spec) => {
         if (errCode) {
           console.error("Jeeliz no pudo inicializar:", errCode);
+          status = "error: " + errCode;
           failed = true;
           return;
         }
+        status = "cargando malla 3D";
         videoTransformMat2 = spec.videoTransformMat2;
         init_threeScene(spec);
         ready = true;
@@ -156,5 +175,5 @@ window.VYBE_FACE_WARP = (() => {
     maskMaterial.uniforms.cheekAmount.value = cheekAmount;
   }
 
-  return { init, resize, getCanvas, setIntensity };
+  return { init, resize, getCanvas, setIntensity, getStatus };
 })();

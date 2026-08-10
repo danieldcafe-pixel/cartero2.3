@@ -94,6 +94,28 @@ window.VYBE_CAMERA = (() => {
     if (filterOn) {
       drawBeautyGlow();
     }
+
+    // ---------- DIAGNÓSTICO TEMPORAL ----------
+    if (window.VYBE_FACE_WARP) {
+      const status = window.VYBE_FACE_WARP.getStatus();
+      const isReady = !!window.VYBE_FACE_WARP.getCanvas();
+      const text = "JEELIZ: " + status;
+      ctx.save();
+      if (canvasEl.classList.contains("mirror")) {
+        ctx.translate(canvasEl.width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.font = "bold 28px sans-serif";
+      ctx.textBaseline = "top";
+      const pad = 10;
+      const w = ctx.measureText(text).width + pad * 2;
+      const y = canvasEl.height * 0.32;
+      ctx.fillStyle = "rgba(0,0,0,0.75)";
+      ctx.fillRect(10, y, w, 46);
+      ctx.fillStyle = isReady ? "#3ddc84" : "#ffb300";
+      ctx.fillText(text, 10 + pad, y + 8);
+      ctx.restore();
+    }
   }
 
   function turnFilterOff(canvasElement, options) {
