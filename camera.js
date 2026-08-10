@@ -50,15 +50,9 @@ window.VYBE_CAMERA = (() => {
     badgeHideTimer = null;
   }
 
-  let canvasDpr = 1; // radios de blur en px se calculan sobre el tamaño real
-                      // del canvas (más grande que la pantalla en móviles de
-                      // alta densidad), así que hay que escalarlos con esto
-                      // para que el desenfoque se vea igual de fuerte en
-                      // cualquier pantalla.
   function resizeCanvasToDisplaySize() {
     const rect = canvasEl.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    canvasDpr = dpr;
     const w = Math.max(1, Math.round(rect.width * dpr));
     const h = Math.max(1, Math.round(rect.height * dpr));
     if (canvasEl.width !== w || canvasEl.height !== h) {
@@ -80,6 +74,45 @@ window.VYBE_CAMERA = (() => {
   function drawCovered(source, rect) {
     if (!rect) return;
     ctx.drawImage(source, rect.dx, rect.dy, rect.dw, rect.dh);
+  }
+
+  // ---------- Desenfoque "estirado" (no depende de ctx.filter) ----------
+  // ctx.filter con blur() tiene soporte poco fiable en Safari/iOS: en
+  // algunos dispositivos simplemente no dibuja nada, lo que dejaba el
+  // filtro embellecedor sin ningún efecto visible. Esta técnica dibuja el
+  // video en un canvas diminuto (eso ya lo desenfoca al perder detalle) y
+  // luego lo estira de vuelta a tamaño completo — funciona igual en
+  // cualquier navegador porque solo usa drawImage.
+  let glowCanvas = null;
+  let glowCtx = null;
+
+  function drawSoftGlow(rect, strong) {
+    if (!glowCanvas) {
+      glowCanvas = document.createElement("canvas");
+      glowCtx = glowCanvas.getContext("2d");
+    }
+    const downscale = strong ? 34 : 20; // más alto = más desenfoque
+    const gw = Math.max(2, Math.round(canvasEl.width / downscale));
+    const gh = Math.max(2, Math.round(canvasEl.height / downscale));
+    if (glowCanvas.width !== gw || glowCanvas.height !== gh) {
+      glowCanvas.width = gw;
+      glowCanvas.height = gh;
+    }
+    const s = gw / canvasEl.width;
+    glowCtx.clearRect(0, 0, gw, gh);
+    glowCtx.drawImage(sourceVideo, rect.dx * s, rect.dy * s, rect.dw * s, rect.dh * s);
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.globalAlpha = strong ? 0.9 : 0.75;
+    ctx.drawImage(glowCanvas, 0, 0, gw, gh, 0, 0, canvasEl.width, canvasEl.height);
+    ctx.globalAlpha = 1;
+
+    // Brillo cálido encima (modo "screen": aclara sin lavar los blancos).
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = strong ? "rgba(255,222,200,0.34)" : "rgba(255,222,200,0.22)";
+    ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    ctx.restore();
   }
 
   function pathFromIndices(landmarks, indices, rect) {
@@ -132,34 +165,23 @@ window.VYBE_CAMERA = (() => {
         updateFaceMask(rect);
       }
 
-      // 2) Glow cálido sobre TODA la imagen, en modo "screen" — esto es lo
-      // que hace que el filtro se note siempre, incluso si la detección de
+      // 2) Glow/desenfoque fuerte sobre TODA la imagen — esto es lo que
+      // hace que el filtro se note siempre, incluso si la detección de
       // cara (paso 3) todavía está cargando o falla en el dispositivo.
-      // Los radios de blur se escalan por canvasDpr porque el canvas tiene
-      // tantos píxeles reales como devicePixelRatio × su tamaño en pantalla
-      // (p. ej. x3 en un iPhone) — sin esto, un blur "fuerte" en móvil de
-      // gama alta se ve casi invisible.
-      ctx.filter = `blur(${Math.round(11 * canvasDpr)}px) brightness(1.35) saturate(1.35) contrast(0.94)`;
-      ctx.globalAlpha = 0.6;
-      ctx.globalCompositeOperation = "screen";
-      drawCovered(sourceVideo, rect);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = "source-over";
+      ctx.filter = "none";
+      drawSoftGlow(rect, false);
 
       if (faceLandmarker && cachedMask) {
-        // 3) Suavizado extra, más fuerte, SOLO dentro del óvalo de la cara.
+        // 3) Suavizado extra, mucho más fuerte, SOLO dentro del óvalo de cara.
         ctx.save();
         ctx.clip(cachedMask.facePath);
-        ctx.filter = `blur(${Math.round(14 * canvasDpr)}px) brightness(1.12) saturate(1.15)`;
-        ctx.globalAlpha = 0.55;
-        drawCovered(sourceVideo, rect);
-        ctx.globalAlpha = 1;
+        drawSoftGlow(rect, true);
         ctx.restore();
 
-        // 4) Se devuelve la nitidez de ojos y boca por encima del suavizado.
+        // 4) Se devuelve la nitidez total de ojos y boca por encima.
         ctx.save();
         ctx.clip(cachedMask.eyesMouthPath);
-        ctx.filter = "brightness(1.06) saturate(1.1) contrast(1.03)";
+        ctx.filter = "none";
         drawCovered(sourceVideo, rect);
         ctx.restore();
       }
