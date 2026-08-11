@@ -121,7 +121,6 @@
     elements.brandIcon.classList.toggle("is-empty", !config.brand.letter);
     elements.wordmark.textContent = config.brand.name;
     elements.miniLogo.textContent = config.brand.letter;
-    elements.miniLogo.classList.toggle("is-empty", !config.brand.letter);
     elements.brandLabel.textContent = config.brand.label;
 
     // Pantalla de inicio
