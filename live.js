@@ -18,6 +18,7 @@ window.VYBE_LIVE = (() => {
 
   let intervals = [];
   let sparkTimeouts = [];
+  let commentInterval = null;
 
   const SPARK_COLORS = ["#5ce6ed", "#9377ff", "#ff6f91", "#ffd166", "#7be495"];
   const SPARK_CHARS = ["💎"];
@@ -161,11 +162,17 @@ window.VYBE_LIVE = (() => {
       if (refs.elapsedTime) refs.elapsedTime.textContent = formatElapsed(Date.now() - startTime);
     }, 1000));
 
-    // Los 5 comentarios son attrezzo fijo para rodaje: sin aleatoriedad,
-    // y al llegar al último vuelven a empezar por el primero (bucle).
-    const commentInterval = setInterval(() => {
+    // Los 5 comentarios son attrezzo fijo para rodaje: sin aleatoriedad
+    // y se detienen solos una vez publicados los 5, para que se vean
+    // igual (mismo orden, mismo timing) en cada toma. Toca el logo para
+    // volver a los 5 comentarios desde el principio.
+    commentInterval = setInterval(() => {
+      if (commentIndex >= cfg.comments.length) {
+        clearInterval(commentInterval);
+        return;
+      }
       pushComment();
-    }, 30000);
+    }, 25000);
     intervals.push(commentInterval);
 
     intervals.push(setInterval(randomReactionStep, 1400));
@@ -195,5 +202,22 @@ window.VYBE_LIVE = (() => {
     return true;
   }
 
-  return { start, manualReaction, isFrozen, setFrozen, setViewers };
+  function restartComments() {
+    if (!started || !cfg) return false;
+    if (commentInterval) clearInterval(commentInterval);
+    commentIndex = 0;
+    if (refs.chatFeed) refs.chatFeed.innerHTML = "";
+    pushComment();
+    commentInterval = setInterval(() => {
+      if (commentIndex >= cfg.comments.length) {
+        clearInterval(commentInterval);
+        return;
+      }
+      pushComment();
+    }, 25000);
+    intervals.push(commentInterval);
+    return true;
+  }
+
+  return { start, manualReaction, isFrozen, setFrozen, setViewers, restartComments };
 })();

@@ -336,10 +336,13 @@
     }
 
     let pressTimer = null;
+    let longPressFired = false;
     pressTargets.forEach(target => {
       const start = () => {
+        longPressFired = false;
         target.classList.add("pressing");
         pressTimer = setTimeout(() => {
+          longPressFired = true;
           target.classList.remove("pressing");
           openPanel();
         }, HOLD_MS);
@@ -352,7 +355,15 @@
         event.preventDefault();
         start();
       });
-      target.addEventListener("pointerup", cancel);
+      target.addEventListener("pointerup", () => {
+        const wasLongPress = longPressFired;
+        cancel();
+        // Toque corto (no mantenido) sobre el logo: reinicia el chat
+        // a los 5 comentarios desde el principio, sin abrir ajustes.
+        if (target === elements.miniLogo && !wasLongPress) {
+          window.VYBE_LIVE.restartComments();
+        }
+      });
       target.addEventListener("pointercancel", cancel);
       target.addEventListener("dragstart", event => event.preventDefault());
       target.addEventListener("contextmenu", event => event.preventDefault());
