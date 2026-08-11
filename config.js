@@ -40,8 +40,8 @@ window.VYBE_CONFIG = {
   },
 
   /* ---------- TARJETA DEL CREADOR ---------- */
-  displayName: "Helen Wildson",
-  handle: "@helenwildson",
+  displayName: "Helen Wilson",
+  handle: "@helenwilson",
   location: "San Francisco",
 
   /* ---------- TELEMETRÍA (fila de indicadores) ---------- */
