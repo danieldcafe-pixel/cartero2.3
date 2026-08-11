@@ -161,19 +161,13 @@ window.VYBE_LIVE = (() => {
       if (refs.elapsedTime) refs.elapsedTime.textContent = formatElapsed(Date.now() - startTime);
     }, 1000));
 
-    // Los 5 comentarios son attrezzo fijo para rodaje: sin aleatoriedad
-    // y se detienen solos una vez publicados los 5, para que se vean
-    // igual (mismo orden, mismo timing) en cada toma.
+    // Los 5 comentarios son attrezzo fijo para rodaje: sin aleatoriedad,
+    // y al llegar al último vuelven a empezar por el primero (bucle).
     const commentInterval = setInterval(() => {
-      if (commentIndex >= cfg.comments.length) {
-        clearInterval(commentInterval);
-        return;
-      }
       pushComment();
-    }, 2600);
+    }, 30000);
     intervals.push(commentInterval);
 
-    intervals.push(setInterval(randomViewerStep, 2200));
     intervals.push(setInterval(randomReactionStep, 1400));
 
     // Primer comentario casi inmediato para que la pantalla no se sienta vacía.

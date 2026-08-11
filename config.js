@@ -102,8 +102,8 @@ window.VYBE_CONFIG = {
      Exactamente 5, en este orden, sin aleatoriedad — para que se vean
      igual en cada toma. Usuarios inventados para la producción. */
   comments: [
-    ["puppylover80032", "You're stunning ✨✨"],
-    ["puppylover80031", "Hi, how are you? Look at your daughter! So smart"],
+    ["puppylover80032", "HI HONEY <3"],
+    ["woke.is.a.v1rus", "you're stunning ✨✨"],
     ["quantum.rae", "Omg yasss queeen"],
     ["freethinker_lo", "The system is so broken, you are so right."],
     ["kyle.realtalk", "750 an hour?!?! Lmao"]
