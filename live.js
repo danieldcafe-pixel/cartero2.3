@@ -127,10 +127,10 @@ window.VYBE_LIVE = (() => {
 
   function randomViewerStep() {
     if (frozen) return;
-    // Sesgado hacia arriba para que se sienta una emisión creciendo,
-    // con algo de vaivén natural.
-    const delta = Math.round((Math.random() - 0.35) * 14);
-    if (delta !== 0) bumpViewers(delta);
+    // Solo sube, nunca baja — para que se vea la transmisión "haciéndose
+    // viral" mientras avanza la escena.
+    const delta = 1 + Math.floor(Math.random() * 4);
+    bumpViewers(delta);
   }
 
   function randomReactionStep() {
@@ -170,6 +170,7 @@ window.VYBE_LIVE = (() => {
     intervals.push(commentInterval);
 
     intervals.push(setInterval(randomReactionStep, 1400));
+    intervals.push(setInterval(randomViewerStep, 1200));
 
     // Primer comentario casi inmediato para que la pantalla no se sienta vacía.
     const firstComment = setTimeout(pushComment, 600);
