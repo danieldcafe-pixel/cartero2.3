@@ -162,17 +162,11 @@ window.VYBE_LIVE = (() => {
       if (refs.elapsedTime) refs.elapsedTime.textContent = formatElapsed(Date.now() - startTime);
     }, 1000));
 
-    // Los 5 comentarios son attrezzo fijo para rodaje: sin aleatoriedad
-    // y se detienen solos una vez publicados los 5, para que se vean
-    // igual (mismo orden, mismo timing) en cada toma. Toca el logo para
-    // volver a los 5 comentarios desde el principio.
-    commentInterval = setInterval(() => {
-      if (commentIndex >= cfg.comments.length) {
-        clearInterval(commentInterval);
-        return;
-      }
-      pushComment();
-    }, 25000);
+    // Los comentarios son attrezzo fijo para rodaje: sin aleatoriedad,
+    // siempre el mismo orden. Con una lista grande (escena caótica) se
+    // repiten en bucle si la toma dura más que la lista, en vez de
+    // detenerse. Toca el logo para reiniciar desde el primer comentario.
+    commentInterval = setInterval(pushComment, 900);
     intervals.push(commentInterval);
 
     intervals.push(setInterval(randomReactionStep, 1400));
@@ -208,13 +202,7 @@ window.VYBE_LIVE = (() => {
     commentIndex = 0;
     if (refs.chatFeed) refs.chatFeed.innerHTML = "";
     pushComment();
-    commentInterval = setInterval(() => {
-      if (commentIndex >= cfg.comments.length) {
-        clearInterval(commentInterval);
-        return;
-      }
-      pushComment();
-    }, 25000);
+    commentInterval = setInterval(pushComment, 900);
     intervals.push(commentInterval);
     return true;
   }
